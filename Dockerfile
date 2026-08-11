@@ -12,3 +12,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 CMD ["start-app", "--title", "UltraStar Deluxe", "/opt/usdx/AppRun"]
 
+# Alias stage for CI matrix compatibility.
+FROM minimal AS full
+
