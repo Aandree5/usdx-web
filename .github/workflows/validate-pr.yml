@@ -1,0 +1,68 @@
+name: Validate Pull Request
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  pre-commit-check:
+    name: Pre-commit Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.x"
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit hooks
+        run: pre-commit run --all-files
+
+  docker-build-healthcheck:
+    name: Docker Build & Healthcheck
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    strategy:
+      matrix:
+        variant: [minimal, full]
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build Docker image
+        run: |
+          docker buildx build --load \
+            --cache-from type=gha,scope=amd64-${{ matrix.variant }} \
+            --cache-to type=gha,mode=max,scope=amd64-${{ matrix.variant }} \
+            --target ${{ matrix.variant }} \
+            -t usdx-web:${{ matrix.variant }} .
+
+      - name: Run container
+        run: docker run -d --name usdx-web-${{ matrix.variant }}-test usdx-web:${{ matrix.variant }}
+
+      - name: Wait for healthcheck to pass
+        run: |
+          for i in {1..10}; do
+            STATUS=$(docker inspect --format='{{json .State.Health.Status}}' usdx-web-${{ matrix.variant }}-test)
+            echo "Health status: $STATUS"
+            if [ "$STATUS" == "\"healthy\"" ]; then
+              exit 0
+            fi
+            sleep 5
+          done
+          docker logs usdx-web-${{ matrix.variant }}-test
+          exit 1
