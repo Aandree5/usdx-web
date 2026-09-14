@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM aandree5/gui-web-base:v1.11.0 AS minimal
+FROM aandree5/gui-web-base:v2.0.0 AS minimal
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget libgl1-mesa-dri libgles2 \
