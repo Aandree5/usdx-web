@@ -1,7 +1,8 @@
 # UltraStar Deluxe Web
 
 <div align="center">
-  <img src="./images/logo/logo.svg" alt="usdx-web Logo" width="256" />
+  <!-- Use full URL to enable logo to show on mirror docker hub description -->
+  <img src="https://raw.githubusercontent.com/Aandree5/usdx-web/f64ffebb0d9c1a16e37ec518f1ed0ccd4a3c0cb9/images/logo/logo.svg" alt="usdx-web Logo" width="256" />
 </div>
  
 
