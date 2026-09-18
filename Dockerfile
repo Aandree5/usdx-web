@@ -18,7 +18,8 @@ LABEL org.opencontainers.image.authors="Aandree5" \
     org.opencontainers.image.license="Apache-2.0" \
     org.opencontainers.image.url="https://github.com/Aandree5/usdx-web" \
     org.opencontainers.image.title="USDX Web" \
-    org.opencontainers.image.description="Play UltraStar Deluxe from your browser. No local installation required."
+    org.opencontainers.image.description="Play UltraStar Deluxe from your browser. No local installation required." \
+    org.opencontainers.image.source="https://github.com/Aandree5/usdx-web"
 
 ARG USDX_VERSION=2026.6.0
 
