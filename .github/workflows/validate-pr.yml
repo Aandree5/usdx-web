@@ -31,12 +31,17 @@ jobs:
         run: pre-commit run --all-files
 
   docker-build-healthcheck:
-    name: Docker Build & Healthcheck
+    name: Docker Build & Healthcheck (${{ matrix.variant }}, ${{ matrix.runtime.name }} user)
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     strategy:
       matrix:
         variant: [minimal, full]
+        runtime:
+          - name: default
+            user_args: ""
+          - name: custom
+            user_args: "--user 1234:2345"
     steps:
       - uses: actions/checkout@v7
 
@@ -52,17 +57,24 @@ jobs:
             -t usdx-web:${{ matrix.variant }} .
 
       - name: Run container
-        run: docker run -d --name usdx-web-${{ matrix.variant }}-test usdx-web:${{ matrix.variant }}
+        run: |
+          docker run -d ${{ matrix.runtime.user_args }} \
+            --name usdx-web-${{ matrix.variant }}-${{ matrix.runtime.name }}-test \
+            usdx-web:${{ matrix.variant }}
 
-      - name: Wait for healthcheck to pass
+      - name: Wait for healthcheck
         run: |
           for i in {1..10}; do
-            STATUS=$(docker inspect --format='{{json .State.Health.Status}}' usdx-web-${{ matrix.variant }}-test)
+            STATUS=$(docker inspect --format='{{json .State.Health.Status}}' usdx-web-${{ matrix.variant }}-${{ matrix.runtime.name }}-test)
             echo "Health status: $STATUS"
             if [ "$STATUS" == "\"healthy\"" ]; then
               exit 0
             fi
             sleep 5
           done
-          docker logs usdx-web-${{ matrix.variant }}-test
+          docker logs usdx-web-${{ matrix.variant }}-${{ matrix.runtime.name }}-test
           exit 1
+
+      - name: Remove test container
+        if: always()
+        run: docker rm -f usdx-web-${{ matrix.variant }}-${{ matrix.runtime.name }}-test || true
